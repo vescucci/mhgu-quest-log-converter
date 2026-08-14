@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MHGU Quest Log Converter</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f3f3;
+      color: #222;
+    }
+
+    .app {
+      width: min(900px, 92%);
+      margin: 40px auto;
+      background: white;
+      padding: 24px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 24px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 18px 0 8px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 230px;
+      resize: vertical;
+      padding: 12px;
+      font: 14px Consolas, monospace;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    button {
+      padding: 9px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid #999;
+      border-radius: 4px;
+      background: #eee;
+    }
+
+    button:hover {
+      background: #ddd;
+    }
+
+    #status {
+      min-height: 22px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <h1>MHGU Quest Log Converter</h1>
+
+    <label for="rawInput">Raw Hunt Log</label>
+
+    <textarea
+      id="rawInput"
+      placeholder="Paste one or more copied hunts here..."
+    ></textarea>
+
+    <div class="buttons">
+      <button id="pasteButton" type="button">Paste Raw Hunt</button>
+      <button id="convertButton" type="button">Convert</button>
+      <button id="clearButton" type="button">Clear</button>
+    </div>
+
+    <label for="formattedOutput">Formatted Quest Log</label>
+
+    <textarea
+      id="formattedOutput"
+      readonly
+      placeholder="Converted hunts will appear here..."
+    ></textarea>
+
+    <div class="buttons">
+      <button id="copyButton" type="button">Copy Result</button>
+    </div>
+
+    <div id="status"></div>
+  </main>
+
+  <script>
+    const rawInput = document.getElementById("rawInput");
+    const formattedOutput = document.getElementById("formattedOutput");
+    const status = document.getElementById("status");
+
+    document
+      .getElementById("convertButton")
+      .addEventListener("click", convertAllHunts);
+
+    document
+      .getElementById("copyButton")
+      .addEventListener("click", copyResult);
+
+    document
+      .getElementById("pasteButton")
+      .addEventListener("click", pasteRawHunt);
+
+    document
+      .getElementById("clearButton")
+      .addEventListener("click", clearAll);
+
+
+    function convertAllHunts() {
+      const rawText = rawInput.value.trim();
+
+      if (!rawText) {
+        formattedOutput.value = "";
+        setStatus("Paste at least one hunt first.");
+        return;
+      }
+
+      const hunts = splitHunts(rawText);
+      const converted = hunts
+        .map(convertHunt)
+        .filter(hunt => hunt.trim() !== "");
+
+      formattedOutput.value = converted.join("\n\n");
+
+      setStatus(
+        converted.length === 1
+          ? "1 hunt converted."
+          : `${converted.length} hunts converted.`
+      );
+    }
+
+
+    function splitHunts(rawText) {
+      const normalized = rawText.replace(/\r\n/g, "\n").trim();
+
+      // Multiple copied hunts normally begin with Date:
+      // Split before each Date: line without removing it.
+      if (/^Date:/im.test(normalized)) {
+        return normalized
+          .split(/(?=^Date:)/gim)
+          .map(hunt => hunt.trim())
+          .filter(Boolean);
+      }
+
+      // If no Date: exists, treat everything as one hunt.
+      return [normalized];
+    }
+
+
+    function convertHunt(rawText) {
+      const quest = getValue(rawText, "Quest:");
+      const locale = getValue(rawText, "Locale:");
+      const objective = getValue(rawText, "Objective:");
+      const armor = getValue(rawText, "Armor Used:");
+      const weapon = getValue(rawText, "Weapon:");
+      const party = getValue(rawText, "Hunting Party:");
+      const carts = getValue(rawText, "Carts:");
+      const outcome = getValue(rawText, "Outcome:");
+      const clearTime = getValue(rawText, "Clear Time:");
+      const notes = getValue(rawText, "Notes:");
+
+      if (!quest) {
+        return "";
+      }
+
+      let questTitle = quest;
+      let monster = "";
+
+      // Use the LAST slash so a quest like:
+      // Village 8★ // Quest Name / Monster
+      // keeps "Village 8★ // Quest Name" intact.
+      const slashPosition = quest.lastIndexOf("/");
+
+      if (slashPosition >= 0) {
+        questTitle = quest.slice(0, slashPosition).trim();
+        monster = quest.slice(slashPosition + 1).trim();
+      }
+
+      const failed = outcome.toLowerCase().includes("fail");
+
+      let titleLine = `**${questTitle}**`;
+
+      if (monster) {
+        titleLine += ` / ${monster}`;
+      }
+
+      if (failed) {
+        titleLine = `~~${titleLine}~~`;
+      }
+
+      const output = [titleLine];
+
+      if (locale) {
+        output.push(`*${locale}*`);
+      }
+
+      if (objective) {
+        output.push(objective);
+      }
+
+      if (notes) {
+        output.push(notes);
+      }
+
+      if (armor || weapon) {
+        if (armor && weapon) {
+          output.push(`Set: ${armor} + ${weapon}.`);
+        } else {
+          output.push(`Set: ${armor || weapon}.`);
+        }
+      }
+
+      if (party) {
+        output.push(`Hunting Party: ${party}`);
+      }
+
+      if (carts) {
+        if (failed) {
+          output.push(`Carts: ${carts} / QUEST FAILED`);
+        } else {
+          output.push(`Carts: ${carts}`);
+        }
+      } else if (failed) {
+        output.push("QUEST FAILED");
+      }
+
+      if (clearTime) {
+        output.push(`Clear Time: ${clearTime}`);
+      }
+
+      return output.join("\n");
+    }
+
+
+    function getValue(rawText, fieldName) {
+      const lines = rawText.replace(/\r\n/g, "\n").split("\n");
+
+      for (const line of lines) {
+        if (
+          line
+            .toLowerCase()
+            .startsWith(fieldName.toLowerCase())
+        ) {
+          const colonPosition = line.indexOf(":");
+
+          if (colonPosition >= 0) {
+            return line.slice(colonPosition + 1).trim();
+          }
+        }
+      }
+
+      return "";
+    }
+
+
+    async function pasteRawHunt() {
+      try {
+        const text = await navigator.clipboard.readText();
+
+        if (!text) {
+          setStatus("Clipboard does not contain text.");
+          return;
+        }
+
+        rawInput.value = text;
+        setStatus("Raw hunt pasted from clipboard.");
+      } catch {
+        setStatus(
+          "Browser blocked clipboard access. Click the raw box and press Ctrl+V instead."
+        );
+      }
+    }
+
+
+    async function copyResult() {
+      const text = formattedOutput.value;
+
+      if (!text.trim()) {
+        setStatus("There is nothing to copy.");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(text);
+        setStatus("Formatted quest log copied to clipboard.");
+      } catch {
+        formattedOutput.focus();
+        formattedOutput.select();
+
+        const copied = document.execCommand("copy");
+
+        setStatus(
+          copied
+            ? "Formatted quest log copied to clipboard."
+            : "Could not copy automatically. Press Ctrl+C."
+        );
+      }
+    }
+
+
+    function clearAll() {
+      rawInput.value = "";
+      formattedOutput.value = "";
+      setStatus("");
+      rawInput.focus();
+    }
+
+
+    function setStatus(message) {
+      status.textContent = message;
+    }
+  </script>
+</body>
+</html>
