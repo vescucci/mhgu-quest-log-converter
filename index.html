@@ -286,7 +286,7 @@
         }
 
         rawInput.value = text;
-        setStatus("Raw hunt pasted from clipboard.");
+        setStatus("Pasted from clipboard.");
       } catch {
         setStatus(
           "Browser blocked clipboard access. Click the raw box and press Ctrl+V instead."
@@ -305,7 +305,7 @@
 
       try {
         await navigator.clipboard.writeText(text);
-        setStatus("Formatted quest log copied to clipboard.");
+        setStatus("Copied to clipboard.");
       } catch {
         formattedOutput.focus();
         formattedOutput.select();
@@ -314,7 +314,7 @@
 
         setStatus(
           copied
-            ? "Formatted quest log copied to clipboard."
+            ? "Copied to clipboard."
             : "Could not copy automatically. Press Ctrl+C."
         );
       }
