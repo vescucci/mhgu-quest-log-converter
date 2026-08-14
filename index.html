@@ -83,7 +83,7 @@
 
     <textarea
       id="rawInput"
-      placeholder="Pasted hunts."
+      placeholder="Paste"
     ></textarea>
 
     <div class="buttons">
@@ -97,7 +97,7 @@
     <textarea
       id="formattedOutput"
       readonly
-      placeholder="Converted hunts."
+      placeholder="Result"
     ></textarea>
 
     <div class="buttons">
@@ -147,8 +147,8 @@
 
       setStatus(
         converted.length === 1
-          ? "1 hunt converted."
-          : `${converted.length} hunts converted.`
+          ? "1 quest reformatted."
+          : `${converted.length} quests refomratted.`
       );
     }
 
