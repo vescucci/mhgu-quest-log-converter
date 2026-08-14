@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+
+<!--
+  This tells the browser that this file uses modern HTML5.
+-->
+
+<html lang="en">
+
+<!--
+  <html> contains the entire webpage.
+
+  lang="en" tells browsers and accessibility tools
+  that the page is written in English.
+-->
+
+<head>
+
+  <!--
+    The <head> contains information ABOUT the webpage.
+    Most things in here do not appear directly on the page.
+  -->
+
+  <meta charset="UTF-8" />
+
+  <!--
+    UTF-8 allows us to use a large range of characters,
+    including things like ★.
+  -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!--
+    This helps the website display properly on phones
+    and other smaller screens.
+  -->
+
+  <title>MHGU Quest Log Converter</title>
+
+  <!--
+    <title> is what appears in the browser tab.
+  -->
+
+
+  <style>
+
+    /*
+      Everything inside <style> is CSS.
+
+      CSS controls how the webpage LOOKS:
+      sizes, colors, spacing, fonts, borders, etc.
+    */
+
+
+    * {
+      box-sizing: border-box;
+    }
+
+    /*
+      * means "every element on the page."
+
+      box-sizing: border-box makes sizing elements easier.
+
+      Normally, if something is width: 100px and then you add
+      20px of padding, it becomes wider than 100px.
+
+      With border-box, the padding is included inside the 100px.
+    */
+
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f3f3;
+      color: #222;
+    }
+
+    /*
+      body represents the visible webpage.
+
+      margin: 0;
+        Removes the browser's default empty space around the page.
+
+      font-family:
+        Uses Arial if available.
+        "sans-serif" is a fallback if Arial isn't available.
+
+      background:
+        Sets the overall page background.
+
+      color:
+        Sets the default text color.
+    */
+
+
+    .app {
+      width: min(900px, 92%);
+      margin: 40px auto;
+      background: white;
+      padding: 24px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    /*
+      .app targets anything with:
+
+          class="app"
+
+      In our HTML below, that is the <main> element.
+
+      width: min(900px, 92%);
+        The program can be at most 900 pixels wide,
+        but on a small screen it will use 92% of the screen.
+
+      margin: 40px auto;
+        40px above and below.
+        "auto" on the sides centers the box.
+
+      background: white;
+        Makes the app itself white.
+
+      padding: 24px;
+        Adds empty space INSIDE the app around its contents.
+
+      border:
+        Adds the thin gray outline.
+
+      border-radius:
+        Rounds the corners.
+    */
+
+
+    h1 {
+      margin-top: 0;
+      font-size: 24px;
+    }
+
+    /*
+      This changes every <h1> heading.
+
+      We only have one:
+      MHGU Quest Log Converter
+    */
+
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 18px 0 8px;
+    }
+
+    /*
+      This affects our labels:
+
+        Raw Hunt Log
+        Formatted Quest Log
+
+      display: block;
+        Gives the label its own line.
+
+      font-weight: bold;
+        Makes it bold.
+
+      margin: 18px 0 8px;
+        This shorthand means:
+
+        top:    18px
+        sides:   0px
+        bottom:  8px
+    */
+
+
+    textarea {
+      width: 100%;
+      min-height: 230px;
+      resize: vertical;
+      padding: 12px;
+      font: 14px Consolas, monospace;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+    }
+
+    /*
+      textarea targets both large text boxes.
+
+      width: 100%;
+        Makes them fill the available width.
+
+      min-height: 230px;
+        They start at least 230 pixels tall.
+
+      resize: vertical;
+        The user can drag them taller or shorter,
+        but cannot resize them sideways.
+
+      padding:
+        Adds room between the text and the edge of the box.
+
+      font:
+        Uses 14px Consolas.
+        monospace is the fallback.
+
+      You could replace this with:
+
+        font: 14px "Atkinson Hyperlegible", Arial, sans-serif;
+
+      if you've loaded Atkinson Hyperlegible.
+
+      border-radius:
+        Gives the text boxes slightly rounded corners.
+    */
+
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    /*
+      .buttons affects the <div class="buttons"> containers.
+
+      display: flex;
+        Puts the buttons next to each other rather than
+        automatically stacking them.
+
+      flex-wrap: wrap;
+        If the screen gets too narrow, the buttons are allowed
+        to move onto another row.
+
+      gap:
+        Adds space between buttons.
+    */
+
+
+    button {
+      padding: 9px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid #999;
+      border-radius: 4px;
+      background: #eee;
+    }
+
+    /*
+      This affects every <button>.
+
+      cursor: pointer;
+        Makes the mouse cursor become the hand icon
+        when hovering over a button.
+    */
+
+
+    button:hover {
+      background: #ddd;
+    }
+
+    /*
+      :hover means:
+
+      "Use this style only while the mouse is over the button."
+
+      So the button gets slightly darker when hovered.
+    */
+
+
+    #status {
+      min-height: 22px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    /*
+      #status targets the element with:
+
+          id="status"
+
+      This is where we display messages such as:
+
+        2 hunts converted.
+        Formatted quest log copied to clipboard.
+
+      The # symbol means we're selecting an ID.
+    */
+
+  </style>
+</head>
+
+
+<body>
+
+  <!--
+    Everything inside <body> is the actual visible webpage.
+  -->
+
+
+  <main class="app">
+
+    <!--
+      <main> means "this is the primary content of the page."
+
+      class="app" connects it to our CSS rule:
+
+          .app { ... }
+    -->
+
+
+    <h1>MHGU Quest Log Converter</h1>
+
+    <!--
+      h1 is the main heading.
+    -->
+
+
+    <label for="rawInput">Raw Hunt Log</label>
+
+    <!--
+      The "for" value connects this label to the textarea
+      whose ID is "rawInput".
+    -->
+
+
+    <textarea
+      id="rawInput"
+      placeholder="Pasted hunts."
+    ></textarea>
+
+    <!--
+      This is the first large text box.
+
+      id="rawInput"
+        Gives JavaScript a way to find this exact box.
+
+      placeholder=
+        Shows faint instructional text while the box is empty.
+    -->
+
+
+    <div class="buttons">
+
+      <!--
+        This div simply groups our three buttons together.
+        class="buttons" applies the flexbox styling from above.
+      -->
+
+
+      <button id="pasteButton" type="button">Paste</button>
+
+      <!--
+        id="pasteButton" allows JavaScript to find this button.
+      -->
+
+
+      <button id="convertButton" type="button">Convert</button>
+
+
+      <button id="clearButton" type="button">Clear</button>
+
+    </div>
+
+
+    <label for="formattedOutput">Formatted Quest Log</label>
+
+
+    <textarea
+      id="formattedOutput"
+      readonly
+      placeholder="Converted hunts."
+    ></textarea>
+
+    <!--
+      This is the output box.
+
+      readonly means the user can select/copy the text,
+      but can't accidentally type into it.
+    -->
+
+
+    <div class="buttons">
+      <button id="copyButton" type="button">Copy</button>
+    </div>
+
+
+    <div id="status"></div>
+
+    <!--
+      This starts empty.
+
+      JavaScript later puts messages inside it.
+    -->
+
+  </main>
+
+
+  <script>
+
+    /*
+      Everything inside <script> is JavaScript.
+
+      HTML created the interface.
+      CSS styled it.
+      JavaScript makes it actually DO things.
+    */
+
+
+    /*
+      First we find some elements in the HTML and save references
+      to them in variables.
+
+      document means "this webpage."
+
+      getElementById means:
+      "Find the HTML element with this particular ID."
+    */
+
+
+    const rawInput = document.getElementById("rawInput");
+
+    /*
+      rawInput now refers to:
+
+        <textarea id="rawInput">
+    */
+
+
+    const formattedOutput = document.getElementById("formattedOutput");
+
+    /*
+      formattedOutput refers to our second text box.
+    */
+
+
+    const status = document.getElementById("status");
+
+    /*
+      status refers to:
+
+        <div id="status"></div>
+    */
+
+
+    /*
+      const creates a variable whose reference won't be reassigned.
+
+      For example:
+
+        const rawInput = ...
+
+      means rawInput will continue referring to the same
+      textarea element.
+    */
+
+
+    document
+      .getElementById("convertButton")
+      .addEventListener("click", convertAllHunts);
+
+    /*
+      Here we're saying:
+
+      1. Find the Convert button.
+      2. Listen for the user to click it.
+      3. When clicked, run the function convertAllHunts().
+
+      We DON'T write:
+
+        convertAllHunts()
+
+      here because that would run it immediately.
+
+      Writing:
+
+        convertAllHunts
+
+      means "use this function when the click happens."
+    */
+
+
+    document
+      .getElementById("copyButton")
+      .addEventListener("click", copyResult);
+
+
+    document
+      .getElementById("pasteButton")
+      .addEventListener("click", pasteRawHunt);
+
+
+    document
+      .getElementById("clearButton")
+      .addEventListener("click", clearAll);
+
+
+    /*
+      At this point, all four buttons have been connected
+      to the functions that will control them.
+    */
+
+
+
+    function convertAllHunts() {
+
+      /*
+        This function runs when Convert is clicked.
+
+        Its job is to:
+
+        1. Get the pasted text.
+        2. Separate it into individual hunts.
+        3. Convert each hunt.
+        4. Put them into the output box.
+      */
+
+
+      const rawText = rawInput.value.trim();
+
+      /*
+        rawInput.value
+          Gets whatever text is currently inside the textarea.
+
+        .trim()
+          Removes unnecessary blank space/newlines from
+          the beginning and end.
+
+        The finished text is stored in rawText.
+      */
+
+
+      if (!rawText) {
+
+        /*
+          "if" lets the program make a decision.
+
+          ! means "not".
+
+          So:
+
+              if (!rawText)
+
+          basically means:
+
+          "If rawText is empty..."
+        */
+
+
+        formattedOutput.value = "";
+
+        /*
+          Clear the result box.
+        */
+
+
+        setStatus("Paste at least one hunt first.");
+
+        /*
+          Show an error/status message.
+        */
+
+
+        return;
+
+        /*
+          return ends the function immediately.
+
+          There is no reason to continue trying to convert
+          something if there is no input.
+        */
+      }
+
+
+      const hunts = splitHunts(rawText);
+
+      /*
+        Send all the pasted text to splitHunts().
+
+        splitHunts gives us an ARRAY of individual hunts.
+
+        Think of an array as a list:
+
+        [
+          hunt1,
+          hunt2,
+          hunt3
+        ]
+      */
+
+
+      const converted = hunts
+        .map(convertHunt)
+        .filter(hunt => hunt.trim() !== "");
+
+      /*
+        This is two operations chained together.
+
+
+        .map(convertHunt)
+
+        means:
+
+        "Take every hunt in the hunts array and run
+        convertHunt() on it."
+
+        For example:
+
+        BEFORE:
+
+        [
+          raw hunt 1,
+          raw hunt 2
+        ]
+
+        AFTER:
+
+        [
+          formatted hunt 1,
+          formatted hunt 2
+        ]
+
+
+        .filter(...)
+
+        then removes any empty results.
+
+        hunt => hunt.trim() !== ""
+
+        is a short function that basically means:
+
+        "Keep this hunt if it isn't blank."
+      */
+
+
+      formattedOutput.value = converted.join("\n\n");
+
+      /*
+        converted is still an array.
+
+        .join() combines all its items into one big string.
+
+        \n means a new line.
+
+        \n\n means TWO new lines.
+
+        That gives us one blank line between hunts.
+      */
+
+
+      setStatus(
+        converted.length === 1
+          ? "1 hunt converted."
+          : `${converted.length} hunts converted.`
+      );
+
+      /*
+        converted.length tells us how many converted hunts exist.
+
+        === means "exactly equals."
+
+        This uses something called a ternary operator:
+
+            condition
+              ? value if true
+              : value if false
+
+        In plain English:
+
+        If there is exactly 1 hunt:
+            say "1 hunt converted."
+
+        Otherwise:
+            say "X hunts converted."
+
+
+        ${converted.length}
+
+        inserts the actual number into the string.
+
+        These strings use backticks ` instead of normal quotes
+        because backticks allow ${...} values inside them.
+      */
+    }
+
+
+
+    function splitHunts(rawText) {
+
+      /*
+        This function separates several pasted hunts
+        into individual pieces.
+      */
+
+
+      const normalized = rawText.replace(/\r\n/g, "\n").trim();
+
+      /*
+        Windows and other systems can represent new lines
+        slightly differently.
+
+        Windows commonly uses:
+            \r\n
+
+        Other systems commonly use:
+            \n
+
+        This replaces Windows-style new lines with simple \n
+        so the rest of our code can treat them consistently.
+
+
+        /something/g is a regular expression.
+
+        The "g" means "replace ALL occurrences."
+      */
+
+
+      if (/^Date:/im.test(normalized)) {
+
+        /*
+          This checks whether the text contains lines
+          that begin with:
+
+              Date:
+
+          This is another regular expression.
+
+          ^Date:
+            means "Date: at the beginning of a line."
+
+          i
+            means case-insensitive.
+
+          m
+            means treat each line as having its own beginning.
+
+          .test(normalized)
+            asks whether a match exists.
+        */
+
+
+        return normalized
+          .split(/(?=^Date:)/gim)
+          .map(hunt => hunt.trim())
+          .filter(Boolean);
+
+        /*
+          .split(...)
+            Separates the text every time another Date: begins.
+
+          The special (?=...) part is called a "lookahead."
+
+          It lets us split BEFORE Date:
+          without deleting Date: itself.
+
+
+          .map(hunt => hunt.trim())
+
+            Removes extra whitespace from each hunt.
+
+
+          .filter(Boolean)
+
+            Removes empty entries from the array.
+
+
+          The final result looks something like:
+
+          [
+            "Date: ...\nQuest: ...",
+            "Date: ...\nQuest: ...",
+            "Date: ...\nQuest: ..."
+          ]
+        */
+      }
+
+
+      return [normalized];
+
+      /*
+        If no Date: fields exist, assume there is only one hunt.
+
+        The brackets turn it into an array containing one item:
+
+        [
+          normalized
+        ]
+
+        This means the rest of the program can always work
+        with an array, whether we pasted 1 hunt or 50 hunts.
+      */
+    }
+
+
+
+    function convertHunt(rawText) {
+
+      /*
+        This is the core conversion function.
+
+        It receives ONE raw hunt and creates ONE formatted hunt.
+      */
+
+
+      const quest = getValue(rawText, "Quest:");
+      const locale = getValue(rawText, "Locale:");
+      const objective = getValue(rawText, "Objective:");
+      const armor = getValue(rawText, "Armor Used:");
+      const weapon = getValue(rawText, "Weapon:");
+      const party = getValue(rawText, "Hunting Party:");
+      const carts = getValue(rawText, "Carts:");
+      const outcome = getValue(rawText, "Outcome:");
+      const clearTime = getValue(rawText, "Clear Time:");
+      const notes = getValue(rawText, "Notes:");
+
+      /*
+        getValue() is another function farther down.
+
+        For example:
+
+            getValue(rawText, "Weapon:")
+
+        searches for:
+
+            Weapon: Vermilion Rim
+
+        and returns only:
+
+            Vermilion Rim
+
+
+        So these variables now contain just the values
+        we care about.
+      */
+
+
+      if (!quest) {
+        return "";
+      }
+
+      /*
+        If there is no Quest field, this probably isn't
+        a valid hunt.
+
+        Return an empty string instead of trying to format it.
+      */
+
+
+      let questTitle = quest;
+      let monster = "";
+
+      /*
+        "let" creates variables that we intend to CHANGE later.
+
+        const = don't reassign it
+        let   = we may reassign it
+
+        At first:
+
+          questTitle = the entire Quest field
+          monster = blank
+      */
+
+
+      const slashPosition = quest.lastIndexOf("/");
+
+      /*
+        Suppose we have:
+
+        Village 8★ // Quest Name / Nargacuga
+
+        There are THREE slash characters in that string.
+
+        We don't want the // inside the quest rank.
+
+        lastIndexOf("/")
+
+        finds the position of the FINAL slash.
+
+        That's the slash separating:
+
+            Quest Name / Monster
+      */
+
+
+      if (slashPosition >= 0) {
+
+        /*
+          If a slash was found...
+        */
+
+
+        questTitle = quest.slice(0, slashPosition).trim();
+
+        /*
+          .slice(start, end)
+
+          takes part of a string.
+
+          Starting at position 0 means:
+          start at the beginning.
+
+          Stop at slashPosition.
+
+          Result:
+
+          Village 8★ // Quest Name
+        */
+
+
+        monster = quest.slice(slashPosition + 1).trim();
+
+        /*
+          Start one character AFTER the slash
+          and take everything to the end.
+
+          Result:
+
+          Nargacuga
+        */
+      }
+
+
+      const failed = outcome.toLowerCase().includes("fail");
+
+      /*
+        outcome might say things like:
+
+          Success
+          Failed
+          Failure
+
+        .toLowerCase()
+
+        converts it to lowercase:
+
+          Failed -> failed
+
+        .includes("fail")
+
+        checks whether the word "fail" exists anywhere.
+
+        So both:
+
+          failed
+          failure
+
+        count as failed quests.
+
+        The result is a Boolean:
+
+          true
+          false
+      */
+
+
+      let titleLine = `**${questTitle}**`;
+
+      /*
+        Backticks let us insert variables using ${...}.
+
+        If questTitle is:
+
+          Village 8★ // Noise Violation
+
+        this becomes:
+
+          **Village 8★ // Noise Violation**
+
+        The ** symbols are Markdown for bold text.
+      */
+
+
+      if (monster) {
+        titleLine += ` / ${monster}`;
+      }
+
+      /*
+        += means "add onto the existing value."
+
+        So:
+
+          **Quest Name**
+
+        becomes:
+
+          **Quest Name** / Nargacuga
+      */
+
+
+      if (failed) {
+        titleLine = `~~${titleLine}~~`;
+      }
+
+      /*
+        Markdown uses ~~ around text for strikethrough.
+
+        So a failed hunt becomes:
+
+          ~~**Quest Name** / Monster~~
+      */
+
+
+      const output = [titleLine];
+
+      /*
+        Start an array containing our first output line.
+
+        We'll add more lines using .push().
+      */
+
+
+      if (locale) {
+        output.push(`*${locale}*`);
+      }
+
+      /*
+        If locale exists, add it.
+
+        *text* is Markdown italic formatting.
+
+        Example:
+
+          *Misty Peaks*
+      */
+
+
+      if (objective) {
+        output.push(objective);
+      }
+
+      /*
+        Add the Objective only if one exists.
+      */
+
+
+      if (notes) {
+        output.push(notes);
+      }
+
+      /*
+        Same with Notes.
+
+        This is why hunts without notes don't get an
+        unnecessary blank Notes line.
+      */
+
+
+      if (armor || weapon) {
+
+        /*
+          || means OR.
+
+          So this means:
+
+          "If armor exists OR weapon exists..."
+        */
+
+
+        if (armor && weapon) {
+
+          /*
+            && means AND.
+
+            So this means:
+
+            "If armor AND weapon both exist..."
+          */
+
+
+          output.push(`Set: ${armor} + ${weapon}.`);
+
+          /*
+            Example:
+
+            Set: Arzuros Set X + Vermilion Rim.
+          */
+
+
+        } else {
+
+          output.push(`Set: ${armor || weapon}.`);
+
+          /*
+            If one of them is missing, use whichever one exists.
+
+            armor || weapon
+
+            means:
+
+            "Use armor if it exists;
+             otherwise use weapon."
+          */
+        }
+      }
+
+
+      if (party) {
+        output.push(`Hunting Party: ${party}`);
+      }
+
+      /*
+        Example:
+
+          Hunting Party: Solo
+
+        or:
+
+          Hunting Party: Matt, John, Sarah
+      */
+
+
+      if (carts) {
+
+        /*
+          If a Carts value exists...
+        */
+
+
+        if (failed) {
+
+          output.push(`Carts: ${carts} / QUEST FAILED`);
+
+        } else {
+
+          output.push(`Carts: ${carts}`);
+
+        }
+
+      } else if (failed) {
+
+        /*
+          If carts DOESN'T exist, but the quest failed,
+          still make sure QUEST FAILED gets shown.
+        */
+
+
+        output.push("QUEST FAILED");
+      }
+
+
+      if (clearTime) {
+        output.push(`Clear Time: ${clearTime}`);
+      }
+
+
+      return output.join("\n");
+
+      /*
+        output is currently an array:
+
+        [
+          "**Quest** / Monster",
+          "*Misty Peaks*",
+          "Objective...",
+          "Set: Armor + Weapon.",
+          "Hunting Party: Solo",
+          "Carts: 0",
+          "Clear Time: 25'13\"40"
+        ]
+
+        .join("\n")
+
+        combines them using a new line between each item.
+
+        That turns the array into the final formatted text.
+      */
+    }
+
+
+
+    function getValue(rawText, fieldName) {
+
+      /*
+        This helper function extracts a value from a field.
+
+        For example:
+
+        Input:
+          Weapon: Vermilion Rim
+
+        fieldName:
+          Weapon:
+
+        Return value:
+          Vermilion Rim
+      */
+
+
+      const lines = rawText.replace(/\r\n/g, "\n").split("\n");
+
+      /*
+        Normalize the new lines, then split the hunt
+        into an array containing one line at a time.
+
+        For example:
+
+        [
+          "Quest: ...",
+          "Locale: ...",
+          "Objective: ...",
+          "Weapon: ..."
+        ]
+      */
+
+
+      for (const line of lines) {
+
+        /*
+          A for...of loop goes through every item in an array.
+
+          So this means:
+
+          "For each line inside lines..."
+        */
+
+
+        if (
+          line
+            .toLowerCase()
+            .startsWith(fieldName.toLowerCase())
+        ) {
+
+          /*
+            Convert both strings to lowercase so capitalization
+            doesn't matter.
+
+            Then check whether the line starts with fieldName.
+
+            Example:
+
+              line:
+              "Weapon: Vermilion Rim"
+
+              fieldName:
+              "Weapon:"
+
+            Yes, it starts with Weapon:
+          */
+
+
+          const colonPosition = line.indexOf(":");
+
+          /*
+            Find the position of the colon.
+          */
+
+
+          if (colonPosition >= 0) {
+
+            return line.slice(colonPosition + 1).trim();
+
+            /*
+              Take everything AFTER the colon.
+
+              Weapon: Vermilion Rim
+                     ^
+
+              Result:
+
+              Vermilion Rim
+
+              return immediately sends that result back
+              to whatever called getValue().
+            */
+          }
+        }
+      }
+
+
+      return "";
+
+      /*
+        If we looked through every line and couldn't find
+        the requested field, return an empty string.
+      */
+    }
+
+
+
+    async function pasteRawHunt() {
+
+      /*
+        async means this function performs something that
+        may take a moment to finish.
+
+        Clipboard access is handled asynchronously by browsers.
+      */
+
+
+      try {
+
+        /*
+          try means:
+
+          "Attempt this code, but be prepared in case it fails."
+        */
+
+
+        const text = await navigator.clipboard.readText();
+
+        /*
+          navigator.clipboard is the browser's clipboard API.
+
+          readText() asks the browser for the text currently
+          copied to the clipboard.
+
+          await means:
+
+          "Wait until the browser gives us the result before
+          continuing."
+        */
+
+
+        if (!text) {
+          setStatus("Clipboard does not contain text.");
+          return;
+        }
+
+
+        rawInput.value = text;
+
+        /*
+          Put the clipboard contents into the input textarea.
+        */
+
+
+        setStatus("Raw hunt pasted from clipboard.");
+
+
+      } catch {
+
+        /*
+          catch runs if something inside try fails.
+
+          Browsers may refuse clipboard access for security
+          reasons, especially if the page isn't running over HTTPS.
+        */
+
+
+        setStatus(
+          "Browser blocked clipboard access. Click the raw box and press Ctrl+V instead."
+        );
+      }
+    }
+
+
+
+    async function copyResult() {
+
+      /*
+        This does the opposite of pasteRawHunt().
+
+        It takes our formatted text and writes it
+        TO the clipboard.
+      */
+
+
+      const text = formattedOutput.value;
+
+
+      if (!text.trim()) {
+        setStatus("There is nothing to copy.");
+        return;
+      }
+
+
+      try {
+
+        await navigator.clipboard.writeText(text);
+
+        /*
+          Ask the browser to put "text" onto the clipboard.
+        */
+
+
+        setStatus("Formatted quest log copied to clipboard.");
+
+
+      } catch {
+
+        /*
+          If the modern clipboard API fails,
+          we try an older fallback method.
+        */
+
+
+        formattedOutput.focus();
+
+        /*
+          Put keyboard focus into the output box.
+        */
+
+
+        formattedOutput.select();
+
+        /*
+          Select all text inside it.
+        */
+
+
+        const copied = document.execCommand("copy");
+
+        /*
+          This is an older browser command for copying
+          selected text.
+
+          It returns true or false depending on whether
+          the copy worked.
+        */
+
+
+        setStatus(
+          copied
+            ? "Formatted quest log copied to clipboard."
+            : "Could not copy automatically. Press Ctrl+C."
+        );
+      }
+    }
+
+
+
+    function clearAll() {
+
+      /*
+        Runs when Clear is clicked.
+      */
+
+
+      rawInput.value = "";
+
+      /*
+        Empty the input box.
+      */
+
+
+      formattedOutput.value = "";
+
+      /*
+        Empty the output box.
+      */
+
+
+      setStatus("");
+
+      /*
+        Remove the status message.
+      */
+
+
+      rawInput.focus();
+
+      /*
+        Move the keyboard cursor back to the raw input box,
+        making it immediately ready for another paste.
+      */
+    }
+
+
+
+    function setStatus(message) {
+
+      /*
+        A tiny helper function so we don't have to repeatedly write:
+
+          status.textContent = ...
+
+        everywhere else.
+      */
+
+
+      status.textContent = message;
+
+      /*
+        textContent changes the visible text inside:
+
+          <div id="status"></div>
+
+        For example, it can turn it into:
+
+          <div id="status">2 hunts converted.</div>
+      */
+    }
+
+  </script>
+
+</body>
+</html>
